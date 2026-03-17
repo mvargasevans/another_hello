@@ -13,6 +13,12 @@ func greet(name string) string {
 }
 
 func main() {
+	for _, arg := range os.Args[1:] {
+		if arg == "--serve" {
+			startServer(":8080")
+			return
+		}
+	}
 	name := ""
 	if len(os.Args) > 1 {
 		name = os.Args[1]
