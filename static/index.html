@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Castle Door</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: Georgia, serif;
+  }
+
+  .scene {
+    position: relative;
+    width: 340px;
+    height: 460px;
+  }
+
+  /* Stone wall */
+  .wall {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 38px,
+        rgba(0,0,0,0.35) 38px,
+        rgba(0,0,0,0.35) 42px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 58px,
+        rgba(0,0,0,0.2) 58px,
+        rgba(0,0,0,0.2) 62px
+      );
+    background-color: #7a6a55;
+    border-radius: 4px;
+  }
+
+  /* Offset every other row of stones */
+  .wall::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 58px,
+        rgba(0,0,0,0.15) 58px,
+        rgba(0,0,0,0.15) 62px
+      );
+    background-size: 120px 80px;
+    background-position: 0 40px;
+  }
+
+  /* Arch opening — clipped to Norman arch shape */
+  .arch-opening {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: 160px;
+    height: 300px;
+    overflow: hidden;
+    clip-path: polygon(
+      0% 100%,
+      0% 45%,
+      3% 35%, 8% 26%, 15% 18%, 24% 12%, 34% 7%, 44% 4%, 50% 3%,
+      56% 4%, 66% 7%, 76% 12%, 85% 18%, 92% 26%, 97% 35%, 100% 45%,
+      100% 100%
+    );
+  }
+
+  /* Interior glow — visible when door opens */
+  .interior {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, #c8832a 0%, #a0541a 40%, #5c2d0a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .hola-text {
+    font-size: 2.4rem;
+    font-weight: bold;
+    color: #ffe8b0;
+    text-shadow: 0 0 18px #ff9922, 0 0 40px #ff6600;
+    opacity: 0;
+    transition: opacity 0.4s ease 0.5s;
+    letter-spacing: 0.05em;
+  }
+
+  /* 3-D door panel */
+  .door-wrapper {
+    position: absolute;
+    inset: 0;
+    perspective: 900px;
+  }
+
+  .door {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .door.open {
+    transform: rotateY(-78deg);
+  }
+
+  .door-face {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #5c3d1e 0%, #3b2310 60%, #2a1a0c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 3px solid #1a0e05;
+  }
+
+  /* Door wood grain */
+  .door-face::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      170deg,
+      transparent,
+      transparent 12px,
+      rgba(255,255,255,0.03) 12px,
+      rgba(255,255,255,0.03) 13px
+    );
+  }
+
+  /* Door panels */
+  .door-face::after {
+    content: '';
+    position: absolute;
+    top: 18%; left: 12%; right: 12%; bottom: 18%;
+    border: 3px solid #7a4f28;
+    box-shadow: inset 0 0 0 3px #2a1a0c;
+    border-radius: 2px;
+  }
+
+  .hello-text {
+    position: relative;
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #e8c87a;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    letter-spacing: 0.05em;
+    z-index: 1;
+  }
+
+  /* Iron ring handle */
+  .handle {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: 4px solid #888;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.1);
+    z-index: 2;
+  }
+
+  /* Arch SVG overlay — drawn on top to give stone surround */
+  .arch-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Hint text */
+  .hint {
+    position: absolute;
+    bottom: -36px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #888;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: opacity 0.3s;
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="wall"></div>
+
+  <div class="arch-opening">
+    <div class="interior">
+      <span class="hola-text" id="hola">Hola</span>
+    </div>
+    <div class="door-wrapper">
+      <div class="door" id="door" onclick="toggleDoor()">
+        <div class="door-face">
+          <span class="hello-text">Hello</span>
+          <div class="handle"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG arch stone surround -->
+  <svg class="arch-svg" viewBox="0 0 340 460" xmlns="http://www.w3.org/2000/svg">
+    <!-- Mask to cut out arch opening -->
+    <defs>
+      <mask id="archMask">
+        <rect width="340" height="460" fill="white"/>
+        <!-- Norman arch opening -->
+        <path d="
+          M 90 460
+          L 90 207
+          C 90 150 110 115 130 98
+          C 148 82 160 78 170 77
+          C 180 78 192 82 210 98
+          C 230 115 250 150 250 207
+          L 250 460
+          Z
+        " fill="black"/>
+      </mask>
+    </defs>
+
+    <!-- Stone arch surround with voussoirs -->
+    <g mask="url(#archMask)">
+      <rect width="340" height="460" fill="transparent"/>
+    </g>
+
+    <!-- Arch keystone and voussoirs (decorative, drawn on top) -->
+    <!-- Left jamb -->
+    <rect x="82" y="207" width="8" height="253" fill="#6a5a45" stroke="#4a3a2a" stroke-width="1"/>
+    <!-- Right jamb -->
+    <rect x="250" y="207" width="8" height="253" fill="#6a5a45" stroke="#4a3a2a" stroke-width="1"/>
+
+    <!-- Voussoir stones around arch (simplified) -->
+    <g fill="#8a7560" stroke="#4a3a2a" stroke-width="1.5">
+      <!-- Left side voussoirs -->
+      <polygon points="82,207 90,207 88,185 78,190"/>
+      <polygon points="78,190 88,185 83,163 71,172"/>
+      <polygon points="71,172 83,163 76,141 62,154"/>
+      <polygon points="62,154 76,141 68,118 52,134"/>
+      <polygon points="52,134 68,118 62,96 42,115"/>
+      <!-- Right side voussoirs -->
+      <polygon points="258,207 250,207 252,185 262,190"/>
+      <polygon points="262,190 252,185 257,163 269,172"/>
+      <polygon points="269,172 257,163 264,141 278,154"/>
+      <polygon points="278,154 264,141 272,118 288,134"/>
+      <polygon points="288,134 272,118 278,96 298,115"/>
+      <!-- Keystone -->
+      <polygon points="155,77 170,74 185,77 182,95 170,98 158,95"/>
+    </g>
+
+    <!-- Arch outline shadow -->
+    <path d="
+      M 90 460
+      L 90 207
+      C 90 150 110 115 130 98
+      C 148 82 160 78 170 77
+      C 180 78 192 82 210 98
+      C 230 115 250 150 250 207
+      L 250 460
+    " fill="none" stroke="#2a1a0a" stroke-width="3"/>
+  </svg>
+
+  <div class="hint" id="hint">click the door</div>
+</div>
+
+<script>
+  function toggleDoor() {
+    const door = document.getElementById('door');
+    const hola = document.getElementById('hola');
+    const hint = document.getElementById('hint');
+    const isOpen = door.classList.toggle('open');
+    hola.style.opacity = isOpen ? '1' : '0';
+    hint.style.opacity = isOpen ? '0' : '1';
+  }
+</script>
+</body>
+</html>
